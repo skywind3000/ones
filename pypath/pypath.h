@@ -56,7 +56,7 @@ extern "C" {
 #endif
 
 //---------------------------------------------------------------------
-// Posix Stat
+// File Stat
 //---------------------------------------------------------------------
 #define ISTAT_IFMT		0170000		// file type mask
 #define ISTAT_IFIFO		0010000		// named pipe (fifo) 
@@ -111,41 +111,41 @@ struct PYPATH_STAT
 	uint32_t st_flags;
 };
 
-typedef struct PYPATH_STAT iposix_stat_t;
+typedef struct PYPATH_STAT pypath_stat_t;
 
 #define PYPATH_MAXPATH		4096
 #define PYPATH_MAXBUFF		((PYPATH_MAXPATH) + 8)
 
 
 // returns 0 for success, -1 for error
-int iposix_stat(const char *path, iposix_stat_t *ostat);
+int pypath_stat(const char *path, pypath_stat_t *ostat);
 
 // wide-char: returns 0 for success, -1 for error
-int iposix_wstat(const wchar_t *path, iposix_stat_t *ostat);
+int pypath_wstat(const wchar_t *path, pypath_stat_t *ostat);
 
 // returns 0 for success, -1 for error
-int iposix_lstat(const char *path, iposix_stat_t *ostat);
+int pypath_lstat(const char *path, pypath_stat_t *ostat);
 
 // returns 0 for success, -1 for error
-int iposix_fstat(int fd, iposix_stat_t *ostat);
+int pypath_fstat(int fd, pypath_stat_t *ostat);
 
 // get current directory
-char *iposix_getcwd(char *path, int size);
+char *pypath_getcwd(char *path, int size);
 
 // wide-char: get current directory (wide char)
-wchar_t *iposix_wgetcwd(wchar_t *path, int size);
+wchar_t *pypath_wgetcwd(wchar_t *path, int size);
 
 // create directory
-int iposix_mkdir(const char *path, int mode);
+int pypath_mkdir(const char *path, int mode);
 
 // wide-char: create directory (wide char)
-int iposix_wmkdir(const wchar_t *path, int mode);
+int pypath_wmkdir(const wchar_t *path, int mode);
 
 // change directory
-int iposix_chdir(const char *path);
+int pypath_chdir(const char *path);
 
 // wide-char: change directory (wide char)
-int iposix_wchdir(const wchar_t *path);
+int pypath_wchdir(const wchar_t *path);
 
 
 #ifndef F_OK
@@ -165,10 +165,10 @@ int iposix_wchdir(const wchar_t *path);
 #endif
 
 // check access
-int iposix_access(const char *path, int mode);
+int pypath_access(const char *path, int mode);
 
 // wide-char: check access (wide char)
-int iposix_waccess(const wchar_t *path, int mode);
+int pypath_waccess(const wchar_t *path, int mode);
 
 // returns 1 for true 0 for false, -1 for not exist
 int pypath_isdir(const char *path);
@@ -203,7 +203,7 @@ int64_t pypath_wgetsize(const wchar_t *path);
 
 
 //---------------------------------------------------------------------
-// Posix Path
+// Python Path
 //---------------------------------------------------------------------
 
 // check absolute path, returns 1 for true 0 for false
@@ -278,26 +278,6 @@ char *pypath_relpath(const char *srcpath, const char *start, char *path, int max
 
 // wide-char: get relative path from start to srcpath
 wchar_t *pypath_wrelpath(const wchar_t *srcpath, const wchar_t *start, wchar_t *path, int maxsize);
-
-
-//---------------------------------------------------------------------
-// platform special
-//---------------------------------------------------------------------
-
-// cross os GetModuleFileName, returns size for success, -1 for error
-int pypath_executable(char *ptr, int size);
-
-// cross os GetModuleFileName, returns size for success, -1 for error
-int pypath_wexecutable(wchar_t *path, int maxsize);
-
-// retrive executable path directly 
-const char *pypath_exepath(void);
-
-// wide-char: retrive executable path directly
-const wchar_t *pypath_wexepath(void);
-
-// make directory recursive
-int pypath_mkdir(const char *path, int mode);
 
 
 

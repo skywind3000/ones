@@ -46,16 +46,16 @@
 // Posix Stat
 //---------------------------------------------------------------------
 #ifdef __unix
-typedef struct stat iposix_ostat_t;
-#define iposix_stat_proc	stat
-#define iposix_lstat_proc	lstat
-#define iposix_fstat_proc	fstat
+typedef struct stat pypath_ostat_t;
+#define pypath_stat_proc	stat
+#define pypath_lstat_proc	lstat
+#define pypath_fstat_proc	fstat
 #else
-typedef struct _stat iposix_ostat_t;
-#define iposix_stat_proc	_stat
-#define iposix_wstat_proc	_wstat
-#define iposix_lstat_proc	_stat
-#define iposix_fstat_proc	_fstat
+typedef struct _stat pypath_ostat_t;
+#define pypath_stat_proc	_stat
+#define pypath_wstat_proc	_wstat
+#define pypath_lstat_proc	_stat
+#define pypath_fstat_proc	_fstat
 #endif
 
 
@@ -97,9 +97,9 @@ typedef struct _stat iposix_ostat_t;
 
 
 // convert stat structure
-void iposix_stat_convert(iposix_stat_t *ostat, const iposix_ostat_t *x)
+void pypath_stat_convert(pypath_stat_t *ostat, const pypath_ostat_t *x)
 {
-	memset(ostat, 0, sizeof(iposix_stat_t));
+	memset(ostat, 0, sizeof(pypath_stat_t));
 	ostat->st_mode = 0;
 
 	#ifdef S_IFDIR
@@ -190,61 +190,61 @@ void iposix_stat_convert(iposix_stat_t *ostat, const iposix_ostat_t *x)
 }
 
 // returns 0 for success, -1 for error
-int iposix_stat_imp(const char *path, iposix_stat_t *ostat)
+int pypath_stat_imp(const char *path, pypath_stat_t *ostat)
 {
-	iposix_ostat_t xstat;
+	pypath_ostat_t xstat;
 	int retval;
-	retval = iposix_stat_proc(path, &xstat);
+	retval = pypath_stat_proc(path, &xstat);
 	if (retval != 0) return -1;
-	iposix_stat_convert(ostat, &xstat);
+	pypath_stat_convert(ostat, &xstat);
 	return 0;
 }
 
 // returns 0 for success, -1 for error
-int iposix_wstat_imp(const wchar_t *path, iposix_stat_t *ostat)
+int pypath_wstat_imp(const wchar_t *path, pypath_stat_t *ostat)
 {
 #ifdef _WIN32
-	iposix_ostat_t xstat;
+	pypath_ostat_t xstat;
 	int retval;
-	retval = iposix_wstat_proc(path, &xstat);
+	retval = pypath_wstat_proc(path, &xstat);
 	if (retval != 0) return -1;
-	iposix_stat_convert(ostat, &xstat);
+	pypath_stat_convert(ostat, &xstat);
 	return 0;
 #else
 	int retval;
 	char *buf = malloc(PYPATH_MAXPATH * 4 + 8);
 	if (buf == NULL) return -1;
 	wcstombs(buf, path, PYPATH_MAXPATH * 4 + 4);
-	retval = iposix_stat_imp(buf, ostat);
+	retval = pypath_stat_imp(buf, ostat);
 	free(buf);
 	return retval;
 #endif
 }
 
 // returns 0 for success, -1 for error
-int iposix_lstat_imp(const char *path, iposix_stat_t *ostat)
+int pypath_lstat_imp(const char *path, pypath_stat_t *ostat)
 {
-	iposix_ostat_t xstat;
+	pypath_ostat_t xstat;
 	int retval;
-	retval = iposix_lstat_proc(path, &xstat);
+	retval = pypath_lstat_proc(path, &xstat);
 	if (retval != 0) return -1;
-	iposix_stat_convert(ostat, &xstat);
+	pypath_stat_convert(ostat, &xstat);
 	return 0;
 }
 
 // returns 0 for success, -1 for error
-int iposix_fstat(int fd, iposix_stat_t *ostat)
+int pypath_fstat(int fd, pypath_stat_t *ostat)
 {
-	iposix_ostat_t xstat;
+	pypath_ostat_t xstat;
 	int retval;
-	retval = iposix_fstat_proc(fd, &xstat);
+	retval = pypath_fstat_proc(fd, &xstat);
 	if (retval != 0) return -1;
-	iposix_stat_convert(ostat, &xstat);
+	pypath_stat_convert(ostat, &xstat);
 	return 0;
 }
 
 // normalize stat path
-static void pypath_stat(const char *src, char *dst)
+static void pypath_os_stat(const char *src, char *dst)
 {
 	int size = (int)strlen(src);
 	if (size > PYPATH_MAXPATH) size = PYPATH_MAXPATH;
@@ -268,7 +268,7 @@ static void pypath_stat(const char *src, char *dst)
 }
 
 // wide char version
-static void pypath_wstat(const wchar_t *src, wchar_t *dst)
+static void pypath_os_wstat(const wchar_t *src, wchar_t *dst)
 {
 	int size = (int)wcslen(src);
 	if (size > PYPATH_MAXPATH) size = PYPATH_MAXPATH;
@@ -293,31 +293,31 @@ static void pypath_wstat(const wchar_t *src, wchar_t *dst)
 
 
 // returns 0 for success, -1 for error
-int iposix_stat(const char *path, iposix_stat_t *ostat)
+int pypath_stat(const char *path, pypath_stat_t *ostat)
 {
 	char buf[PYPATH_MAXBUFF];
-	pypath_stat(path, buf);
-	return iposix_stat_imp(buf, ostat);
+	pypath_os_stat(path, buf);
+	return pypath_stat_imp(buf, ostat);
 }
 
 // wide-char: returns 0 for success, -1 for error
-int iposix_wstat(const wchar_t *path, iposix_stat_t *ostat)
+int pypath_wstat(const wchar_t *path, pypath_stat_t *ostat)
 {
 	wchar_t buf[PYPATH_MAXBUFF];
-	pypath_wstat(path, buf);
-	return iposix_wstat_imp(buf, ostat);
+	pypath_os_wstat(path, buf);
+	return pypath_wstat_imp(buf, ostat);
 }
 
 // returns 0 for success, -1 for error
-int iposix_lstat(const char *path, iposix_stat_t *ostat)
+int pypath_lstat(const char *path, pypath_stat_t *ostat)
 {
 	char buf[PYPATH_MAXBUFF];
-	pypath_stat(path, buf);
-	return iposix_lstat_imp(buf, ostat);
+	pypath_os_stat(path, buf);
+	return pypath_lstat_imp(buf, ostat);
 }
 
 // get current directory
-char *iposix_getcwd(char *path, int size)
+char *pypath_getcwd(char *path, int size)
 {
 #ifdef _WIN32
 	return _getcwd(path, size);
@@ -327,7 +327,7 @@ char *iposix_getcwd(char *path, int size)
 }
 
 // wide-char: get current directory (wide char)
-wchar_t *iposix_wgetcwd(wchar_t *path, int size)
+wchar_t *pypath_wgetcwd(wchar_t *path, int size)
 {
 #ifdef _WIN32
 	return _wgetcwd(path, size);
@@ -341,7 +341,7 @@ wchar_t *iposix_wgetcwd(wchar_t *path, int size)
 }
 
 // create directory
-int iposix_mkdir(const char *path, int mode)
+int pypath_mkdir(const char *path, int mode)
 {
 #ifdef _WIN32
 	return _mkdir(path);
@@ -352,7 +352,7 @@ int iposix_mkdir(const char *path, int mode)
 }
 
 // wide-char: create directory (wide char)
-int iposix_wmkdir(const wchar_t *path, int mode)
+int pypath_wmkdir(const wchar_t *path, int mode)
 {
 #ifdef _WIN32
 	return _wmkdir(path);
@@ -369,7 +369,7 @@ int iposix_wmkdir(const wchar_t *path, int mode)
 }
 
 // change directory
-int iposix_chdir(const char *path)
+int pypath_chdir(const char *path)
 {
 #if defined(_WIN32) && (!defined(__BORLANDC__))
 	return _chdir(path);
@@ -379,7 +379,7 @@ int iposix_chdir(const char *path)
 }
 
 // wide-char: change directory (wide char)
-int iposix_wchdir(const wchar_t *path)
+int pypath_wchdir(const wchar_t *path)
 {
 #ifdef _WIN32
 	return _wchdir(path);
@@ -391,7 +391,7 @@ int iposix_wchdir(const wchar_t *path)
 }
 
 // check access
-int iposix_access(const char *path, int mode)
+int pypath_access(const char *path, int mode)
 {
 #ifdef _WIN32
 	return _access(path, mode);
@@ -401,7 +401,7 @@ int iposix_access(const char *path, int mode)
 }
 
 // wide-char: check access (wide char)
-int iposix_waccess(const wchar_t *path, int mode)
+int pypath_waccess(const wchar_t *path, int mode)
 {
 #ifdef _WIN32
 	return _waccess(path, mode);
@@ -415,8 +415,8 @@ int iposix_waccess(const wchar_t *path, int mode)
 // returns 1 for true 0 for false, -1 for not exist
 int pypath_isdir(const char *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_stat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_stat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISDIR(s.st_mode))? 1 : 0;
 }
@@ -424,8 +424,8 @@ int pypath_isdir(const char *path)
 // wide-char: returns 1 for true 0 for false, -1 for not exist
 int pypath_wisdir(const wchar_t *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_wstat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_wstat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISDIR(s.st_mode))? 1 : 0;
 }
@@ -433,8 +433,8 @@ int pypath_wisdir(const wchar_t *path)
 // returns 1 for true 0 for false, -1 for not exist
 int pypath_isfile(const char *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_stat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_stat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISDIR(s.st_mode))? 0 : 1;
 }
@@ -442,8 +442,8 @@ int pypath_isfile(const char *path)
 // wide-char: returns 1 for true 0 for false, -1 for not exist
 int pypath_wisfile(const wchar_t *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_wstat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_wstat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISDIR(s.st_mode))? 0 : 1;
 }
@@ -451,8 +451,8 @@ int pypath_wisfile(const wchar_t *path)
 // returns 1 for true 0 for false, -1 for not exist
 int pypath_islink(const char *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_stat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_stat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISLNK(s.st_mode))? 1 : 0;
 }
@@ -460,8 +460,8 @@ int pypath_islink(const char *path)
 // wide-char: returns 1 for true 0 for false, -1 for not exist
 int pypath_wislink(const wchar_t *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_wstat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_wstat(path, &s);
 	if (hr != 0) return -1;
 	return (ISTAT_ISLNK(s.st_mode))? 1 : 0;
 }
@@ -469,8 +469,8 @@ int pypath_wislink(const wchar_t *path)
 // returns 1 for true 0 for false
 int pypath_exists(const char *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_stat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_stat(path, &s);
 	if (hr != 0) return 0;
 	return 1;
 }
@@ -478,8 +478,8 @@ int pypath_exists(const char *path)
 // wide-char: returns 1 for true 0 for false
 int pypath_wexists(const wchar_t *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_wstat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_wstat(path, &s);
 	if (hr != 0) return 0;
 	return 1;
 }
@@ -487,8 +487,8 @@ int pypath_wexists(const wchar_t *path)
 // returns file size, -1 for error
 int64_t pypath_getsize(const char *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_stat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_stat(path, &s);
 	if (hr != 0) return -1;
 	return (int64_t)s.st_size;
 }
@@ -496,8 +496,8 @@ int64_t pypath_getsize(const char *path)
 // returns file size, -1 for error
 int64_t pypath_wgetsize(const wchar_t *path)
 {
-	iposix_stat_t s;
-	int hr = iposix_wstat(path, &s);
+	pypath_stat_t s;
+	int hr = pypath_wstat(path, &s);
 	if (hr != 0) return -1;
 	return (int64_t)s.st_size;
 }
@@ -540,22 +540,22 @@ int pypath_wisabs(const wchar_t *path)
 
 
 //---------------------------------------------------------------------
-// iposix_str_t - basic string definition
+// pypath_str_t - basic string definition
 //---------------------------------------------------------------------
 typedef struct {
 	char *p;
 	int l;
 	int m;
-}	iposix_str_t;
+}	pypath_str_t;
 
 
 //---------------------------------------------------------------------
-// iposix_str_t interface
+// pypath_str_t interface
 //---------------------------------------------------------------------
 #define _istrlen(s) ((s)->l)
-#define iposix_str_charh(s, i) (((i) >= 0)? ((s)->p)[i] : ((s)->p)[(s)->l + (i)])
+#define pypath_str_charh(s, i) (((i) >= 0)? ((s)->p)[i] : ((s)->p)[(s)->l + (i)])
 
-static char *iposix_str_init(iposix_str_t *s, char *p, int max)
+static char *pypath_str_init(pypath_str_t *s, char *p, int max)
 {
 	assert((max > 0) && p && s);
 	s->p = p;
@@ -564,7 +564,7 @@ static char *iposix_str_init(iposix_str_t *s, char *p, int max)
 	return p;
 }
 
-char *iposix_str_set(iposix_str_t *s, const char *p, int max)
+char *pypath_str_set(pypath_str_t *s, const char *p, int max)
 {
 	assert((max > 0) && p && s);
 	s->p = (char*)p;
@@ -573,7 +573,7 @@ char *iposix_str_set(iposix_str_t *s, const char *p, int max)
 	return (char*)p;
 }
 
-static char *iposix_str_cat(iposix_str_t *s, const char *p) 
+static char *pypath_str_cat(pypath_str_t *s, const char *p) 
 {
 	char *p1;
 
@@ -585,14 +585,14 @@ static char *iposix_str_cat(iposix_str_t *s, const char *p)
 	return s->p;
 }
 
-static char *iposix_str_copy(iposix_str_t *s, const char *p) 
+static char *pypath_str_copy(pypath_str_t *s, const char *p) 
 {
 	assert(s && p);
 	s->l = 0;
-	return iposix_str_cat(s, p);
+	return pypath_str_cat(s, p);
 }
 
-static char *iposix_str_cats(iposix_str_t *s1, const iposix_str_t *s2) 
+static char *pypath_str_cats(pypath_str_t *s1, const pypath_str_t *s2) 
 {
 	int i;
 	assert(s1 && s2);
@@ -603,7 +603,7 @@ static char *iposix_str_cats(iposix_str_t *s1, const iposix_str_t *s2)
 	return s1->p;
 }
 
-static char *iposix_str_cstr(iposix_str_t *s) 
+static char *pypath_str_cstr(pypath_str_t *s) 
 {
 	assert(s);
 	if (s->l >= s->m) s->l = s->m - 1;
@@ -612,21 +612,21 @@ static char *iposix_str_cstr(iposix_str_t *s)
 	return s->p;
 }
 
-static char iposix_str_char(const iposix_str_t *s, int pos)
+static char pypath_str_char(const pypath_str_t *s, int pos)
 {
 	if (pos >= 0) return (pos > s->l)? 0 : s->p[pos];
 	return (pos < -(s->l))? 0 : s->p[s->l + pos];
 }
 
-static char iposix_str_charhop(iposix_str_t *s)
+static char pypath_str_charhop(pypath_str_t *s)
 {
-	char ch = iposix_str_char(s, -1);
+	char ch = pypath_str_char(s, -1);
 	s->l--;
 	if (s->l < 0) s->l = 0;
 	return ch;
 }
 
-static char *iposix_str_chartok(iposix_str_t *s, const char *p)
+static char *pypath_str_chartok(pypath_str_t *s, const char *p)
 {
 	int i, k;
 
@@ -634,40 +634,40 @@ static char *iposix_str_chartok(iposix_str_t *s, const char *p)
 
 	for (; _istrlen(s) > 0; ) {
 		for (i = 0, k = 0; p[i] && k == 0; i++) {
-			if (iposix_str_char(s, -1) == p[i]) k++;
+			if (pypath_str_char(s, -1) == p[i]) k++;
 		}
 		if (k == 0) break;
-		iposix_str_charhop(s);
+		pypath_str_charhop(s);
 	}
 	for (; _istrlen(s) > 0; ) {
 		for (i = 0, k = 0; p[i] && k == 0; i++) {
-			if (iposix_str_char(s, -1) == p[i]) k++;
+			if (pypath_str_char(s, -1) == p[i]) k++;
 		}
 		if (k) break;
-		iposix_str_charhop(s);
+		pypath_str_charhop(s);
 	}
 
 	return s->p;
 }
 
-static int iposix_str_charmp(iposix_str_t *s, const char *p)
+static int pypath_str_charmp(pypath_str_t *s, const char *p)
 {
 	int i;
 	for (i = 0; i < s->l && ((char*)p)[i]; i++)
-		if (iposix_str_char(s, i) != ((char*)p)[i]) break;
+		if (pypath_str_char(s, i) != ((char*)p)[i]) break;
 	if (((char*)p)[i] == 0 && i == s->l) return 0;
 	return 1;
 }
 
-static char *iposix_str_catc(iposix_str_t *s, char ch)
+static char *pypath_str_catc(pypath_str_t *s, char ch)
 {
 	char text[2] = " ";
 	assert(s);
 	text[0] = ch;
-	return iposix_str_cat(s, text);
+	return pypath_str_cat(s, text);
 }
 
-static int iposix_str_strtok(const char *p1, int *pos, const char *p2)
+static int pypath_str_strtok(const char *p1, int *pos, const char *p2)
 {
 	int i, j, k, r;
 
@@ -701,7 +701,7 @@ static int iposix_str_strtok(const char *p1, int *pos, const char *p2)
 char *pypath_normal(const char *srcpath, char *path, int maxsize)
 {
 	int i, p, c, k, r, t = 0;
-	iposix_str_t s1, s2;
+	pypath_str_t s1, s2;
 	char *p1, *p2;
 	char pp2[3];
 
@@ -719,7 +719,7 @@ char *pypath_normal(const char *srcpath, char *path, int maxsize)
 	p1 = (char*)srcpath;
 
 	path[0] = 0;
-	iposix_str_init(&s1, path, maxsize);
+	pypath_str_init(&s1, path, maxsize);
 
 	if (IPATHSEP == '\\') {
 		pp2[0] = '/';
@@ -733,29 +733,29 @@ char *pypath_normal(const char *srcpath, char *path, int maxsize)
 	p2 = pp2;
 
 	if (p1[0] && p1[1] == ':' && (ISYSNAME == 'u' || ISYSNAME == 'w')) {
-		iposix_str_catc(&s1, *p1++);
-		iposix_str_catc(&s1, *p1++);
+		pypath_str_catc(&s1, *p1++);
+		pypath_str_catc(&s1, *p1++);
 	}
 
 	if (IPATHSEP == '/') {
-		if (p1[0] == '/') iposix_str_catc(&s1, *p1++);
+		if (p1[0] == '/') pypath_str_catc(&s1, *p1++);
 	}	
 	else if (p1[0] == '/' || p1[0] == IPATHSEP) {
-		iposix_str_catc(&s1, IPATHSEP);
+		pypath_str_catc(&s1, IPATHSEP);
 		p1++;
 	}
 
-	r = (iposix_str_char(&s1, -1) == IPATHSEP)? 1 : 0;
+	r = (pypath_str_char(&s1, -1) == IPATHSEP)? 1 : 0;
 	srcpath = (const char*)p1;	
 
-	for (i = 0, c = 0, k = 0; (p = iposix_str_strtok(srcpath, &i, p2)) >= 0; k++) {
+	for (i = 0, c = 0, k = 0; (p = pypath_str_strtok(srcpath, &i, p2)) >= 0; k++) {
 		s2.p = (char*)(srcpath + p);
 		s2.l = s2.m = i - p;
 		// _iputs(&s2); printf("*\n");
-		if (iposix_str_charmp(&s2, ".") == 0) continue;
-		if (iposix_str_charmp(&s2, "..") == 0) {
+		if (pypath_str_charmp(&s2, ".") == 0) continue;
+		if (pypath_str_charmp(&s2, "..") == 0) {
 			if (c != 0) {
-				iposix_str_chartok(&s1, (IPATHSEP == '\\')? "/\\:" : "/");
+				pypath_str_chartok(&s1, (IPATHSEP == '\\')? "/\\:" : "/");
 				c--;
 				continue;
 			}
@@ -766,16 +766,16 @@ char *pypath_normal(const char *srcpath, char *path, int maxsize)
 			c++;
 		}
 		t++;
-		iposix_str_cats(&s1, &s2);
-		iposix_str_catc(&s1, IPATHSEP);
+		pypath_str_cats(&s1, &s2);
+		pypath_str_catc(&s1, IPATHSEP);
 	}
 	if (_istrlen(&s1) == 0) {
-		iposix_str_copy(&s1, ".");
+		pypath_str_copy(&s1, ".");
 	}	else {
-		if (iposix_str_char(&s1, -1) == IPATHSEP && t > 0) 
-			iposix_str_charhop(&s1);
+		if (pypath_str_char(&s1, -1) == IPATHSEP && t > 0) 
+			pypath_str_charhop(&s1);
 	}
-	return iposix_str_cstr(&s1);
+	return pypath_str_cstr(&s1);
 }
 
 
@@ -784,14 +784,14 @@ char *pypath_normal(const char *srcpath, char *path, int maxsize)
 //---------------------------------------------------------------------
 char *pypath_join(const char *p1, const char *p2, char *path, int maxsize)
 {
-	iposix_str_t s;
+	pypath_str_t s;
 	char cc;
 	int postsep = 1;
 	int len1;
 
 	assert(p1 && p2 && maxsize > 0);
 
-	iposix_str_init(&s, path, maxsize);
+	pypath_str_init(&s, path, maxsize);
 
 	if (p1 == NULL || p1[0] == 0) {
 		if (p2 == NULL || p2[0] == 0) {
@@ -799,35 +799,35 @@ char *pypath_join(const char *p1, const char *p2, char *path, int maxsize)
 			return path;
 		}
 		else {
-			iposix_str_cat(&s, p2);
-			return iposix_str_cstr(&s);
+			pypath_str_cat(&s, p2);
+			return pypath_str_cstr(&s);
 		}
 	}
 	else if (p2 == NULL || p2[0] == 0) {
 		len1 = (int)strlen(p1);
 		cc = (len1 > 0)? p1[len1 - 1] : 0;
 		if (cc == '/' || cc == '\\') {
-			iposix_str_cat(&s, p1);
-			return iposix_str_cstr(&s);
+			pypath_str_cat(&s, p1);
+			return pypath_str_cstr(&s);
 		} else {
-			iposix_str_cat(&s, p1);
-			iposix_str_catc(&s, IPATHSEP);
+			pypath_str_cat(&s, p1);
+			pypath_str_catc(&s, IPATHSEP);
 		}
-		return iposix_str_cstr(&s);
+		return pypath_str_cstr(&s);
 	}
 	else if (pypath_isabs(p2)) {
 #ifdef _WIN32
 		if (p2[0] == '\\' || p2[0] == '/') {
 			if (p1[1] == ':') {
-				iposix_str_catc(&s, p1[0]);
-				iposix_str_catc(&s, ':');
-				iposix_str_cat(&s, p2);
-				return iposix_str_cstr(&s);
+				pypath_str_catc(&s, p1[0]);
+				pypath_str_catc(&s, ':');
+				pypath_str_cat(&s, p2);
+				return pypath_str_cstr(&s);
 			}
 		}
 #endif
-		iposix_str_cat(&s, p2);
-		return iposix_str_cstr(&s);
+		pypath_str_cat(&s, p2);
+		return pypath_str_cstr(&s);
 	}
 	else {
 #ifdef _WIN32
@@ -843,14 +843,14 @@ char *pypath_join(const char *p1, const char *p2, char *path, int maxsize)
 					pypath_join(p1 + 2, p2 + 2, path + 2, maxsize - 2);
 					return path;
 				} else {
-					iposix_str_cat(&s, p2);
-					return iposix_str_cstr(&s);
+					pypath_str_cat(&s, p2);
+					return pypath_str_cstr(&s);
 				}
 			}
 		}
 		else if (d2 != 0) {
-			iposix_str_cat(&s, p2);
-			return iposix_str_cstr(&s);
+			pypath_str_cat(&s, p2);
+			return pypath_str_cstr(&s);
 		}
 #endif
 	}
@@ -873,15 +873,15 @@ char *pypath_join(const char *p1, const char *p2, char *path, int maxsize)
 #endif
 	}
 
-	iposix_str_cat(&s, p1);
+	pypath_str_cat(&s, p1);
 
 	if (postsep) {
-		iposix_str_catc(&s, IPATHSEP);
+		pypath_str_catc(&s, IPATHSEP);
 	}
 
-	iposix_str_cat(&s, p2);
+	pypath_str_cat(&s, p2);
 
-	return iposix_str_cstr(&s);
+	return pypath_str_cstr(&s);
 }
 
 
@@ -893,7 +893,7 @@ char *pypath_abspath_unix(const char *srcpath, char *path, int maxsize)
 	base = buf;
 	temp = base + PYPATH_MAXBUFF;
 	if (base == NULL) return NULL;
-	iposix_getcwd(base, PYPATH_MAXPATH);
+	pypath_getcwd(base, PYPATH_MAXPATH);
 	pypath_join(base, srcpath, temp, PYPATH_MAXPATH);
 	pypath_normal(temp, path, maxsize);
 	return path;
@@ -959,7 +959,7 @@ wchar_t *pypath_wabspath(const wchar_t *srcpath, wchar_t *path, int maxsize)
 //---------------------------------------------------------------------
 // UTF-8 to UTF-16
 //---------------------------------------------------------------------
-int iposix_utf8towc(wchar_t *dest, const char *src, int n) 
+int pypath_utf8towc(wchar_t *dest, const char *src, int n) 
 {
 #ifdef _WIN32
 	int required = 0, result = 0;
@@ -992,7 +992,7 @@ int iposix_utf8towc(wchar_t *dest, const char *src, int n)
 //---------------------------------------------------------------------
 // UTF-16 to UTF-8
 //---------------------------------------------------------------------
-int iposix_wcstoutf8(char *dest, const wchar_t *src, int n) {
+int pypath_wcstoutf8(char *dest, const wchar_t *src, int n) {
 #ifdef _WIN32
 	int required, result = 0;
 
@@ -1028,9 +1028,9 @@ wchar_t *pypath_wnormal(const wchar_t *srcpath, wchar_t *path, int maxsize)
 {
 	char buf[PYPATH_MAXBUFF * 2 + 8];
 	char *tmp = buf + PYPATH_MAXBUFF + 4;
-	iposix_wcstoutf8(buf, srcpath, PYPATH_MAXBUFF);
+	pypath_wcstoutf8(buf, srcpath, PYPATH_MAXBUFF);
 	pypath_normal(buf, tmp, PYPATH_MAXBUFF);
-	iposix_utf8towc(path, tmp, maxsize);
+	pypath_utf8towc(path, tmp, maxsize);
 	return path;
 }
 
@@ -1044,10 +1044,10 @@ wchar_t *pypath_wjoin(const wchar_t *p1, const wchar_t *p2,
 	char buf1[PYPATH_MAXBUFF + 8];
 	char buf2[PYPATH_MAXBUFF + 8];
 	char tmp[PYPATH_MAXBUFF + 8];
-	iposix_wcstoutf8(buf1, p1, PYPATH_MAXBUFF);
-	iposix_wcstoutf8(buf2, p2, PYPATH_MAXBUFF);
+	pypath_wcstoutf8(buf1, p1, PYPATH_MAXBUFF);
+	pypath_wcstoutf8(buf2, p2, PYPATH_MAXBUFF);
 	pypath_join(buf1, buf2, tmp, PYPATH_MAXBUFF);
-	iposix_utf8towc(path, tmp, len);
+	pypath_utf8towc(path, tmp, len);
 	return path;
 }
 
@@ -1484,10 +1484,10 @@ int pypath_wcommon(const wchar_t *p1, const wchar_t *p2, wchar_t *path, int maxs
 	char buf[PYPATH_MAXBUFF * 3 + 12];
 	char *tmp = buf + PYPATH_MAXBUFF + 4;
 	char *out = tmp + PYPATH_MAXBUFF + 4;
-	iposix_wcstoutf8(buf, p1, PYPATH_MAXBUFF);
-	iposix_wcstoutf8(tmp, p2, PYPATH_MAXBUFF);
+	pypath_wcstoutf8(buf, p1, PYPATH_MAXBUFF);
+	pypath_wcstoutf8(tmp, p2, PYPATH_MAXBUFF);
 	pypath_common(buf, tmp, out, PYPATH_MAXBUFF);
-	iposix_utf8towc(path, out, maxsize);
+	pypath_utf8towc(path, out, maxsize);
 	if (path == NULL) return 0;
 	return (int)wcslen(path);
 }
@@ -1499,7 +1499,7 @@ int pypath_wcommon(const wchar_t *p1, const wchar_t *p2, wchar_t *path, int maxs
 int pypath_relative(const char *src, const char *start, char *path, int maxsize)
 {
 	int size1, size2, size3, length, i, k = 0;
-	iposix_str_t output;
+	pypath_str_t output;
 	if (!pypath_isabs(src)) return -1;
 	if (!pypath_isabs(start)) return -2;
 	size1 = (int)strlen(start);
@@ -1519,7 +1519,7 @@ int pypath_relative(const char *src, const char *start, char *path, int maxsize)
 #endif
 	}
 	size3 = pypath_common(start, src, NULL, PYPATH_MAXPATH * 4);
-	iposix_str_init(&output, path, maxsize);
+	pypath_str_init(&output, path, maxsize);
 	// count how many ".." needed
 	k = 0;
 	for (i = size3; i < size1; i++) {
@@ -1533,15 +1533,15 @@ int pypath_relative(const char *src, const char *start, char *path, int maxsize)
 	}
 	for (i = 0; i < k; i++) {
 		if (output.l > 0) {
-			iposix_str_catc(&output, IPATHSEP);
+			pypath_str_catc(&output, IPATHSEP);
 		}
-		iposix_str_cat(&output, "..");
+		pypath_str_cat(&output, "..");
 	}
 	// append the rest part from src
 	if (size2 > size3) {
 		int padding = 0;
 		if (output.l > 0) {
-			iposix_str_catc(&output, IPATHSEP);
+			pypath_str_catc(&output, IPATHSEP);
 		}
 		if (src[size3] == '/') {
 			padding = 1;
@@ -1555,9 +1555,9 @@ int pypath_relative(const char *src, const char *start, char *path, int maxsize)
 			}
 #endif
 		}
-		iposix_str_cat(&output, src + size3 + padding);
+		pypath_str_cat(&output, src + size3 + padding);
 	}
-	iposix_str_cstr(&output);
+	pypath_str_cstr(&output);
 	return 0;
 }
 
@@ -1573,7 +1573,7 @@ char *pypath_relpath(const char *srcpath, const char *start, char *path, int max
 	pypath_abspath(srcpath, buf1, PYPATH_MAXBUFF);
 	srcpath = buf1;
 	if (start == NULL || (start && start[0] == 0)) {
-		iposix_getcwd(buf2, PYPATH_MAXPATH);
+		pypath_getcwd(buf2, PYPATH_MAXPATH);
 	} else {
 		pypath_abspath(start, buf2, PYPATH_MAXPATH);
 	}
@@ -1596,14 +1596,14 @@ wchar_t *pypath_wrelpath(const wchar_t *srcpath, const wchar_t *start, wchar_t *
 	char buf1[PYPATH_MAXBUFF];
 	char buf2[PYPATH_MAXBUFF];
 	char buf3[PYPATH_MAXBUFF];
-	iposix_wcstoutf8(buf1, srcpath, PYPATH_MAXPATH);
-	iposix_wcstoutf8(buf2, start, PYPATH_MAXPATH);
+	pypath_wcstoutf8(buf1, srcpath, PYPATH_MAXPATH);
+	pypath_wcstoutf8(buf2, start, PYPATH_MAXPATH);
 	ret = pypath_relpath(buf1, buf2, buf3, PYPATH_MAXPATH);
 	if (ret == NULL) {
 		if (maxsize > 0) path[0] = 0;
 		return NULL;
 	}
-	iposix_utf8towc(path, buf3, maxsize);
+	pypath_utf8towc(path, buf3, maxsize);
 	return path;
 }
 
